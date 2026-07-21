@@ -1,17 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "UniPDF",
+  "name": "UniPDF Pro",
   "version": "1.0",
-  "permissions": ["storage", "tabs"],
+  "description": "Bookmarks, notas e slide lateral para PDFs",
+  "permissions": ["storage", "tabs", "activeTab"],
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Abrir UniPDF"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_start"
-    }
-  ],
-  "host_permissions": ["file:///*"]
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["file:///*", "http://*/*", "https://*/*"]
 }

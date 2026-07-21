@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>UniPDF Pro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="mini-header" class="mode-ghost">
+        <span id="page-display">
+            <input type="number" id="page-input" value="1"> / <span id="page-count">0</span>
+        </span>
+        
+        <div class="zoom-controls">
+            <button id="btn-header-mode" title="Mudar modo (H)">👻</button>
+            <span class="divider">|</span>
+            <button id="btn-zoom-out" title="Ctrl + Minus">➖</button>
+            <input type="text" id="zoom-percent" value="100%">
+            <button id="btn-zoom-in" title="Ctrl + Plus">➕</button>
+            <span class="divider">|</span>
+            <button id="btn-fit-width" title="Largura">↔️</button>
+            <button id="btn-fit-height" title="Altura">↕️</button>
+        </div>
+    </div>
+
+    <div id="viewport">
+        <div id="pages-container">
+            <!-- As páginas serão injetadas aqui pelo viewer.js -->
+        </div>
+    </div>
+
+    <input type="range" id="lateral-slider" min="-100" max="100" value="0">
+    <input type="file" id="file-input" style="display:none" accept="application/pdf">
+
+    <script type="module" src="viewer.js"></script>
+</body>
+</html>
