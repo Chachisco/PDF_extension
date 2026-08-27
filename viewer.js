@@ -8,14 +8,20 @@ const header = document.getElementById('mini-header');
 const pageInput = document.getElementById('page-input');
 const zoomInput = document.getElementById('zoom-percent');
 const btnHeaderMode = document.getElementById('btn-header-mode');
+const fileInput = document.getElementById('file-input');
 
-let pdfDoc = null, currentFilename = "", currentScale = 1.0, headerMode = 'ghost';
-const renderTasks = {}; 
-const renderingStates = {}; // Bloqueio para evitar renderizações duplas
+let pdfDoc = null, currentFilename = "", currentScale = 1.0;
+let headerMode = 'minimal';
+const renderTasks = {};
+const renderingStates = {};
+const textLayerTasks = {};
 
-// --- 1. CARREGAMENTO E RENDER ---
-async function loadPDF(url) {
-    const loadingTask = pdfjsLib.getDocument({ url });
+async function loadPDF(source, filename) {
+    currentFilename = filename;
+    document.title = filename || 'UniPDF Pro';
+    const loadingTask = pdfjsLib.getDocument(
+        typeof source === 'string' ? { url: source } : { data: source }
+    );
     pdfDoc = await loadingTask.promise;
     document.getElementById('page-count').textContent = pdfDoc.numPages;
     
@@ -25,7 +31,13 @@ async function loadPDF(url) {
         wrapper.className = 'page-wrapper';
         wrapper.id = `page-wrapper-${i}`;
         wrapper.dataset.pageNumber = i;
-        wrapper.innerHTML = `<div class="notes-overlay"></div><canvas></canvas>`;
+        
+        // Estrutura: Canvas (Fundo) -> Text (Meio) -> Notes (Topo)
+        wrapper.innerHTML = `
+            <canvas></canvas>
+            <div class="textLayer"></div>
+            <div class="notes-overlay"></div>
+        `;
         container.appendChild(wrapper);
     }
     setupObserver();
@@ -33,54 +45,59 @@ async function loadPDF(url) {
 
 async function renderPage(num) {
     const wrapper = document.getElementById(`page-wrapper-${num}`);
-    if (!wrapper) return;
+    if (!wrapper || renderingStates[num]) return;
     
-    // Detetar a densidade de pixels do teu monitor (ex: 1.5 para 150% de escala no Windows)
-    const dpr = window.devicePixelRatio || 1;
-
+    // Se já estiver renderizado com este zoom, apenas carrega as notas
     if (wrapper.dataset.rendered === "true" && wrapper.dataset.scale == currentScale) {
+        loadNotesForPage(num);
         return;
     }
 
-    if (renderTasks[num]) {
-        try { renderTasks[num].cancel(); } catch(e) {}
-    }
-
     renderingStates[num] = true;
+    const dpr = window.devicePixelRatio || 1;
 
     try {
         const page = await pdfDoc.getPage(num);
-        
-        // Viewport normal para cálculos de layout
         const vport = page.getViewport({ scale: currentScale });
         
         const canvas = wrapper.querySelector('canvas');
-        const ctx = canvas.getContext('2d', { alpha: false }); // alpha: false melhora performance
+        const ctx = canvas.getContext('2d', { alpha: false });
 
-        // O SEGREDO DA NITIDEZ:
-        // O tamanho interno do canvas é multiplicado pelo DPR (Resolução Real)
+        // Ajuste de Resolução (DPR)
         canvas.width = Math.floor(vport.width * dpr);
         canvas.height = Math.floor(vport.height * dpr);
-
-        // O tamanho visual no ecrã mantém-se o original (CSS)
         canvas.style.width = Math.floor(vport.width) + "px";
         canvas.style.height = Math.floor(vport.height) + "px";
-        wrapper.style.width = Math.floor(vport.width) + "px";
-        wrapper.style.height = Math.floor(vport.height) + "px";
-
-        // Ajustar o contexto de desenho para a escala do monitor
-        const transform = [dpr, 0, 0, dpr, 0, 0];
+        
+        wrapper.style.width = canvas.style.width;
+        wrapper.style.height = canvas.style.height;
 
         const renderContext = { 
             canvasContext: ctx, 
             viewport: vport,
-            transform: transform // Aplica a nitidez extra
+            transform: [dpr, 0, 0, dpr, 0, 0]
         };
-        
+
+        if (renderTasks[num]) renderTasks[num].cancel();
         const renderTask = page.render(renderContext);
         renderTasks[num] = renderTask;
-
         await renderTask.promise;
+
+        // --- RENDERIZAR CAMADA DE TEXTO ---
+        const textLayerDiv = wrapper.querySelector('.textLayer');
+        textLayerDiv.innerHTML = "";
+        textLayerDiv.style.setProperty('--scale-factor', currentScale);
+        textLayerDiv.style.setProperty('--total-scale-factor', currentScale);
+
+        const textContent = await page.getTextContent();
+        const textLayer = new pdfjsLib.TextLayer({
+            textContentSource: textContent,
+            container: textLayerDiv,
+            viewport: vport
+        });
+        textLayerTasks[num] = textLayer;
+        await textLayer.render();
+
         wrapper.dataset.rendered = "true";
         wrapper.dataset.scale = currentScale;
         loadNotesForPage(num);
@@ -89,6 +106,8 @@ async function renderPage(num) {
     } finally {
         renderingStates[num] = false;
         renderTasks[num] = null;
+        textLayerTasks[num] = null;
+        if (wrapper && wrapper.dataset.scale != currentScale) renderPage(num);
     }
 }
 
@@ -107,16 +126,24 @@ function setupObserver() {
 }
 
 // --- 2. STICKY NOTES ---
-container.ondblclick = (e) => {
-    const wrapper = e.target.closest('.page-wrapper');
-    if (!wrapper || e.target.tagName === "TEXTAREA" || e.target.classList.contains('sticky-note')) return;
+container.onclick = (e) => {
+    // Se clicou num pino ou textarea, não faz nada
+    if (e.target.closest('.sticky-note') || e.target.tagName === "TEXTAREA") return;
 
-    const rect = wrapper.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    // Só cria se o CTRL estiver premido
+    if (e.ctrlKey) {
+        const wrapper = e.target.closest('.page-wrapper');
+        if (!wrapper) return;
 
-    const overlay = wrapper.querySelector('.notes-overlay');
-    addNoteToUI(overlay, wrapper.dataset.pageNumber, x, y, "");
+        const rect = wrapper.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        addNoteToUI(wrapper.querySelector('.notes-overlay'), wrapper.dataset.pageNumber, x, y, "");
+    } else {
+        // Clique normal: fecha notas ativas
+        document.querySelectorAll('.sticky-note.active').forEach(n => n.classList.remove('active'));
+    }
 };
 
 function addNoteToUI(overlay, pgNum, x, y, text) {
@@ -221,6 +248,8 @@ function updateZoom(newScale) {
     document.querySelectorAll('.page-wrapper').forEach(w => {
         w.dataset.rendered = "false";
     });
+    Object.values(textLayerTasks).forEach(task => task?.cancel());
+    Object.values(renderTasks).forEach(task => task?.cancel());
     renderVisiblePages();
     saveState();
 }
@@ -318,8 +347,8 @@ function saveState() { chrome.storage.local.set({ [currentFilename + "_zoom"]: c
 async function init() {
     const fileUrl = new URLSearchParams(window.location.search).get('file');
     if (fileUrl) {
-        currentFilename = decodeURIComponent(fileUrl).split('/').pop();
-        await loadPDF(fileUrl);
+        const decodedUrl = decodeURIComponent(fileUrl);
+        await loadPDF(decodedUrl, decodedUrl.split('/').pop().split(/[?#]/)[0]);
         chrome.storage.local.get([currentFilename, currentFilename + "_zoom", "global_header_mode"], (res) => {
             if (res[currentFilename + "_zoom"]) currentScale = res[currentFilename + "_zoom"];
             setHeaderMode(res.global_header_mode || 'ghost');
@@ -331,6 +360,23 @@ async function init() {
                 }, 500);
             }
         });
+    } else {
+        fileInput.click();
     }
 }
+
+fileInput.onchange = async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    await loadPDF(await file.arrayBuffer(), file.name);
+    chrome.storage.local.get([currentFilename, currentFilename + "_zoom", "global_header_mode"], (res) => {
+        if (res[currentFilename + "_zoom"]) currentScale = res[currentFilename + "_zoom"];
+        setHeaderMode(res.global_header_mode || 'ghost');
+        updateZoom(currentScale);
+        if (res[currentFilename]) {
+            document.getElementById(`page-wrapper-${res[currentFilename]}`)?.scrollIntoView();
+        }
+    });
+};
+
 init();

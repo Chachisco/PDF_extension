@@ -4,7 +4,10 @@ chrome.action.onClicked.addListener((tab) => {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Só disparar se o URL mudar e for um PDF
-    if (changeInfo.url && changeInfo.url.toLowerCase().endsWith(".pdf")) {
+    if (changeInfo.url) {
+        const url = new URL(changeInfo.url);
+        if (!url.pathname.toLowerCase().endsWith(".pdf")) return;
+
         // Evitar loop infinito
         if (changeInfo.url.includes(chrome.runtime.id)) return;
 
