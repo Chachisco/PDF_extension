@@ -14,8 +14,8 @@ export function setHeaderMode(mode) {
     header.classList.toggle('annotation-active', state.annotationActive);
     header.classList.toggle('eraser-active', state.eraserActive);
     const icons = {
-        ghost: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
-        minimal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        ghost: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        minimal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
         fixed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>'
     };
     document.getElementById('btn-header-mode').innerHTML = icons[mode];
@@ -59,6 +59,56 @@ export function setupUI() {
         event.preventDefault();
         updateZoom(state.currentScale + (event.deltaY > 0 ? -0.1 : 0.1));
     }, { passive: false });
+
+    const btnCopy = document.getElementById('btn-copy-url');
+    if (btnCopy) {
+        // Clique Esquerdo: Se tiver o Ctrl premido (e.ctrlKey) é Linux, senão é Windows.
+        btnCopy.onclick = (e) => handleCopy(e, e.ctrlKey, btnCopy);
+        
+        // Clique Direito: Sempre Linux (WSL)
+        btnCopy.oncontextmenu = (e) => handleCopy(e, true, btnCopy); 
+    }
+}
+
+function handleCopy(e, isLinux, btnElement) {
+    e.preventDefault();
+    
+    const fileUrl = new URLSearchParams(window.location.search).get('file');
+    if (fileUrl) {
+        const finalPath = formatPath(fileUrl, isLinux);
+        navigator.clipboard.writeText(finalPath);
+        
+        // Feedback: Verde para Windows, Azul para Linux
+        const originalHTML = btnElement.innerHTML;
+        const checkColor = isLinux ? '#80d8ff' : '#8be28b'; 
+        btnElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${checkColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        
+        setTimeout(() => { btnElement.innerHTML = originalHTML; }, 2000);
+    }
+}
+
+function formatPath(rawUrl, isLinux) {
+    let path = decodeURIComponent(rawUrl).replace(/^file:\/\/\/?/, '');
+
+    if (path.startsWith('wsl.localhost/') || path.startsWith('wsl$/')) {
+        if (isLinux) {
+            const parts = path.split('/');
+            return '/' + parts.slice(2).join('/');
+        } else {
+            return '\\\\' + path.replace(/\//g, '\\');
+        }
+    }
+
+    const driveMatch = path.match(/^([a-zA-Z]):\/(.*)/);
+    if (driveMatch) {
+        if (isLinux) {
+            const drive = driveMatch[1].toLowerCase();
+            return `/mnt/${drive}/${driveMatch[2]}`;
+        } else {
+            return path.replace(/\//g, '\\');
+        }
+    }
+    return path;
 }
 
 function cycleHeaderMode() {

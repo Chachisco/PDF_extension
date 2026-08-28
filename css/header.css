@@ -9,7 +9,6 @@
     transition: all 0.2s ease-in-out;
 }
 
-/* Garante que os elementos visíveis podem ser clicados */
 #page-display, #annotation-toolbar, .zoom-controls { 
     pointer-events: auto; 
     transition: opacity 0.2s; 
@@ -18,11 +17,10 @@
 /* =========================================
    2. REGRAS GERAIS: QUANDO O RATO NÃO ESTÁ NO HEADER
    ========================================= */
-/* Fundo transparente para não tapar o PDF */
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover) {
     background: transparent;
     border-bottom-color: transparent;
-    pointer-events: none; /* Deixa clicar no PDF através do vazio */
+    pointer-events: none;
 }
 
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover)::before {
@@ -30,18 +28,13 @@
     pointer-events: auto;
 }
 
-/* =========================================
-   3. MODO GHOST (Sem Rato)
-   ========================================= */
-/* Esconde Zoom */
+
 #mini-header.mode-ghost:not(:hover) .zoom-controls { opacity: 0; pointer-events: none; }
 
-/* Mostra as páginas como uma cápsula */
 #mini-header.mode-ghost:not(:hover) #page-display {
     background: #1e1e1e; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 
-/* Esconde barra de ferramentas SE NÃO houver ferramentas ligadas */
 #mini-header.mode-ghost:not(:hover):not(.annotation-active):not(.eraser-active) #annotation-toolbar {
     opacity: 0; pointer-events: none;
 }
@@ -49,13 +42,11 @@
 /* =========================================
    4. MODO MINIMAL (Sem Rato)
    ========================================= */
-/* Esconde Zoom E Páginas */
 #mini-header.mode-minimal:not(:hover) .zoom-controls,
 #mini-header.mode-minimal:not(:hover) #page-display {
     opacity: 0; pointer-events: none;
 }
 
-/* Esconde barra de ferramentas SE NÃO houver ferramentas ligadas */
 #mini-header.mode-minimal:not(:hover):not(.annotation-active):not(.eraser-active) #annotation-toolbar {
     opacity: 0; pointer-events: none;
 }
@@ -63,14 +54,12 @@
 /* =========================================
    5. A CÁPSULA FLUTUANTE (Para ferramentas ativas)
    ========================================= */
-/* Aplica-se ao Ghost e Minimal quando o rato NÃO lá está, mas uma ferramenta está ativa */
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover).annotation-active #annotation-toolbar,
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover).eraser-active #annotation-toolbar {
     background: #1e1e1e; padding: 4px 6px; border-radius: 8px;
     border: 1px solid #444; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
 }
 
-/* Esconde as ferramentas não usadas dentro da cápsula (APENAS no Ghost e Minimal) */
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover).annotation-active #btn-eraser,
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover).eraser-active #btn-annotate,
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover).eraser-active #annotation-options {
