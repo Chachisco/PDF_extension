@@ -2,17 +2,59 @@
    1. BASE HEADER (Modo Fixed & Hover State)
    ========================================= */
 #mini-header {
-    position: fixed; top: 0; left: 0; right: 0; height: 40px;
+    position: fixed; top: 0; left: 0; 
+    width: calc(100vw - 16px); 
+    height: 40px;
     background: #1e1e1e; border-bottom: 1px solid #444;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; z-index: 2000; color: #eee;
     transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
 }
 
-#page-display, #annotation-toolbar, .zoom-controls { 
+#annotation-toolbar, .zoom-controls { 
     pointer-events: auto; 
     transition: opacity 0.2s; 
 }
+
+.header-left { display: flex; align-items: center; gap: 4px; pointer-events: auto; transition: opacity 0.2s; }
+.header-left button { background: transparent; border: none; color: #ccc; cursor: pointer; padding: 6px; border-radius: 4px; transition: 0.2s; }
+.header-left button:hover { background: #333; color: white; }
+.header-left button svg { width: 16px; height: 16px; }
+
+/* Esconde o grupo da esquerda nos modos certos */
+#mini-header.mode-minimal:not(:hover) .header-left,
+#mini-header.mode-ghost:not(:hover).annotation-active .header-left,
+#mini-header.mode-ghost:not(:hover).eraser-active .header-left {
+    opacity: 0; visibility: hidden; pointer-events: none;
+}
+
+#mini-header.mode-ghost:not(:hover) .header-left {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    background: transparent; padding: 0; border-radius: 0; box-shadow: none;
+    gap: 0;
+}
+
+#mini-header.mode-ghost:not(:hover) .header-left > button,
+#mini-header.mode-ghost:not(:hover) .header-left > .divider {
+    display: none;
+}
+
+#mini-header.mode-ghost:not(:hover) #page-display {
+    opacity: 1; visibility: visible; display: inline-flex; align-items: center;
+    background: rgba(30, 30, 30, 0.9);
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-left: 8px;
+}
+
+#mini-header.mode-ghost:not(:hover) .zoom-controls,
+#mini-header.mode-ghost:not(:hover) #annotation-toolbar {
+    opacity: 0; visibility: hidden; pointer-events: none;
+}
+
 
 /* =========================================
    2. REGRAS GERAIS: QUANDO O RATO NÃO ESTÁ NO HEADER
@@ -24,7 +66,7 @@
 }
 
 #mini-header:is(.mode-ghost, .mode-minimal):not(:hover)::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 15px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 40px;
     pointer-events: auto;
 }
 

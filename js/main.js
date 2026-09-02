@@ -13,7 +13,9 @@ function setupNotes() {
     container.onclick = event => {
         if (event.target.closest('.sticky-note') || event.target.tagName === 'TEXTAREA') return;
         if (!event.ctrlKey) {
-            document.querySelectorAll('.sticky-note.active').forEach(note => note.classList.remove('active'));
+            document.querySelectorAll('.sticky-note.active').forEach(note => {
+                if (!note.classList.contains('pinned')) note.classList.remove('active');
+            });
             return;
         }
         const wrapper = event.target.closest('.page-wrapper');
@@ -21,7 +23,9 @@ function setupNotes() {
         const rect = wrapper.getBoundingClientRect();
         addNoteToUI(wrapper.querySelector('.notes-overlay'), wrapper.dataset.pageNumber, ((event.clientX - rect.left) / rect.width) * 100, ((event.clientY - rect.top) / rect.height) * 100, '');
     };
-    viewport.onclick = () => document.querySelectorAll('.sticky-note.active').forEach(note => note.classList.remove('active'));
+    viewport.onclick = () => document.querySelectorAll('.sticky-note.active').forEach(note => {
+        if (!note.classList.contains('pinned')) note.classList.remove('active');
+    });
 }
 
 async function restoreViewerState() {

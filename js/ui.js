@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { saveState } from './storage.js';
 import { applyAnnotation, undoAnnotation } from './annotations.js';
 import { updateZoom, fitWidth, fitHeight } from './pdf-engine.js';
+import { addNoteToUI } from './notes.js';
 
 const header = document.getElementById('mini-header');
 const zoomInput = document.getElementById('zoom-percent');
@@ -68,6 +69,32 @@ export function setupUI() {
         // Clique Direito: Sempre Linux (WSL)
         btnCopy.oncontextmenu = (e) => handleCopy(e, true, btnCopy); 
     }
+
+    const btnAddNote = document.getElementById('btn-add-note');
+    if (btnAddNote) {
+        btnAddNote.onclick = () => {
+            const currentPg = parseInt(pageInput.value, 10);
+            const overlay = document.querySelector(`#page-wrapper-${currentPg} .notes-overlay`);
+            if (overlay) {
+                // Cria a nota a 50% de largura (Centro) e 10% de altura (Topo)
+                addNoteToUI(overlay, currentPg, 50, 10, '', true);
+            }
+        };
+    }
+
+    pageInput.onchange = () => {
+        let val = parseInt(pageInput.value, 10);
+        if (isNaN(val) || val < 1) val = 1;
+        if (state.pdfDoc && val > state.pdfDoc.numPages) val = state.pdfDoc.numPages;
+        pageInput.value = val;
+
+        const wrapper = document.getElementById(`page-wrapper-${val}`);
+        const viewport = document.getElementById('viewport');
+        if (wrapper && viewport) {
+            const y = wrapper.offsetTop - 60;
+            viewport.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    };
 }
 
 function handleCopy(e, isLinux, btnElement) {
@@ -116,6 +143,30 @@ function cycleHeaderMode() {
     setHeaderMode(modes[(modes.indexOf(state.headerMode) + 1) % modes.length]);
 }
 
+function getCurrentPageNumber() {
+    const viewport = document.getElementById('viewport');
+    const pageWrappers = [...document.querySelectorAll('.page-wrapper')];
+    if (!pageWrappers.length) {
+        const value = parseInt(pageInput.value, 10);
+        return Number.isFinite(value) ? value : 1;
+    }
+
+    const viewportTop = viewport.getBoundingClientRect().top;
+    let bestPage = 1;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    pageWrappers.forEach(wrapper => {
+        const rect = wrapper.getBoundingClientRect();
+        const distance = Math.abs(rect.top - viewportTop);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestPage = parseInt(wrapper.dataset.pageNumber, 10) || 1;
+        }
+    });
+
+    return bestPage;
+}
+
 function handleKeydown(event) {
     if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') {
         if (event.key === 'Escape') document.activeElement.blur();
@@ -133,6 +184,30 @@ function handleKeydown(event) {
         return;
     }
     if (event.key.toLowerCase() === 'h') cycleHeaderMode();
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') document.getElementById(`page-wrapper-${parseInt(pageInput.value, 10) + 1}`)?.scrollIntoView({ behavior: 'smooth' });
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') document.getElementById(`page-wrapper-${parseInt(pageInput.value, 10) - 1}`)?.scrollIntoView({ behavior: 'smooth' });
+
+    const currentPage = getCurrentPageNumber();
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        const next = Math.min(currentPage + 1, state.pdfDoc ? state.pdfDoc.numPages : currentPage + 1);
+        const wrapper = document.getElementById(`page-wrapper-${next}`);
+        const viewport = document.getElementById('viewport');
+        if (wrapper && viewport) {
+            pageInput.value = next;
+            const y = wrapper.offsetTop - 42;
+            viewport.scrollTo({ top: y });
+        }
+    }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prev = Math.max(1, currentPage - 1);
+        const wrapper = document.getElementById(`page-wrapper-${prev}`);
+        const viewport = document.getElementById('viewport');
+        if (wrapper && viewport) {
+            pageInput.value = prev;
+            const y = wrapper.offsetTop - 42;
+            viewport.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }
 }

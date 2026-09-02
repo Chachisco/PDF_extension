@@ -15,18 +15,39 @@ export async function loadPDF(source, filename) {
     document.title = filename || 'UniPDF Pro';
     const loadingTask = pdfjsLib.getDocument(typeof source === 'string' ? { url: source } : { data: source });
     state.pdfDoc = await loadingTask.promise;
-    document.getElementById('page-count').textContent = state.pdfDoc.numPages;
+    
+    const totalPages = state.pdfDoc.numPages;
+    document.getElementById('page-count').textContent = totalPages;
     container.innerHTML = '';
-    for (let pageNum = 1; pageNum <= state.pdfDoc.numPages; pageNum++) {
+
+    // 1. Descobrir a geometria EXATA de todas as páginas super rápido (sem as pintar!)
+    const pagePromises = [];
+    for (let i = 1; i <= totalPages; i++) {
+        pagePromises.push(state.pdfDoc.getPage(i));
+    }
+    const pages = await Promise.all(pagePromises);
+
+    // 2. Criar as caixas com as medidas reais de cada uma
+    pages.forEach((page, index) => {
+        const pageNum = index + 1;
+        const vp = page.getViewport({ scale: state.currentScale });
+
         const wrapper = document.createElement('div');
         wrapper.className = 'page-wrapper';
         wrapper.id = `page-wrapper-${pageNum}`;
         wrapper.dataset.pageNumber = pageNum;
+        
+        // Cada página tem a sua medida certa (slides, A4, etc)
+        wrapper.style.width = `${Math.floor(vp.width)}px`;
+        wrapper.style.height = `${Math.floor(vp.height)}px`;
+        
         wrapper.innerHTML = '<canvas></canvas><div class="annotation-layer"></div><div class="textLayer"></div><div class="notes-overlay"></div>';
         container.appendChild(wrapper);
-    }
+    });
+
     setupObserver();
 }
+
 
 export async function renderPage(pageNum) {
     const wrapper = document.getElementById(`page-wrapper-${pageNum}`);
@@ -99,7 +120,22 @@ export function renderVisiblePages() {
 export function updateZoom(newScale) {
     state.currentScale = Math.min(Math.max(0.1, newScale), 5);
     document.getElementById('zoom-percent').value = `${Math.round(state.currentScale * 100)}%`;
-    document.querySelectorAll('.page-wrapper').forEach(wrapper => { wrapper.dataset.rendered = 'false'; });
+    
+    if (state.pdfDoc) {
+        const totalPages = state.pdfDoc.numPages;
+        for (let i = 1; i <= totalPages; i++) {
+            state.pdfDoc.getPage(i).then(page => {
+                const vp = page.getViewport({ scale: state.currentScale });
+                const wrapper = document.getElementById(`page-wrapper-${i}`);
+                if (wrapper) {
+                    wrapper.style.width = `${Math.floor(vp.width)}px`;
+                    wrapper.style.height = `${Math.floor(vp.height)}px`;
+                    wrapper.dataset.rendered = 'false';
+                }
+            });
+        }
+    }
+
     Object.values(state.textLayerTasks).forEach(task => task?.cancel());
     Object.values(state.renderTasks).forEach(task => task?.cancel());
     renderVisiblePages();
@@ -108,10 +144,10 @@ export function updateZoom(newScale) {
 
 export async function fitWidth() {
     const page = await state.pdfDoc.getPage(1);
-    updateZoom((window.innerWidth - 80) / page.getViewport({ scale: 1 }).width);
+    updateZoom((window.innerWidth - 35) / page.getViewport({ scale: 1 }).width);
 }
 
 export async function fitHeight() {
     const page = await state.pdfDoc.getPage(1);
-    updateZoom((window.innerHeight - 100) / page.getViewport({ scale: 1 }).height);
+    updateZoom((window.innerHeight - 50) / page.getViewport({ scale: 1 }).height);
 }

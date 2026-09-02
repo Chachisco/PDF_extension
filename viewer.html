@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+    <!-- NOVA BARRA LATERAL ESQUERDA PARA NOTAS -->
+    <div id="notes-sidebar"></div>
     <!-- PAINEL DE PESQUISA -->
     <div id="search-panel" class="hidden">
         <input type="text" id="search-input" placeholder="Pesquisar (usa vírgula para várias palavras)...">
@@ -28,10 +30,20 @@
 
     <!-- HEADER -->
     <div id="mini-header" class="mode-ghost">
-        <span id="page-display">
-            <input type="number" id="page-input" value="1"> / <span id="page-count">0</span>
-        </span>
-
+        
+        <!-- AGRUPAMENTO À ESQUERDA -->
+        <div class="header-left">
+            <span id="page-display">
+                <input type="number" id="page-input" value="1"> / <span id="page-count">0</span>
+            </span>
+            <span class="divider">|</span>
+            <button id="btn-add-note" title="Criar Nova Nota (Centro da Página)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button id="btn-copy-url" title="Copiar Caminho (Esquerdo: Win | Direito: Linux)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+        </div>
         <!-- NOVA BARRA DE ANOTAÇÕES -->
         <div id="annotation-toolbar">
             
@@ -75,10 +87,6 @@
         </div>
         
         <div class="zoom-controls">
-            <span class="divider">|</span>
-            <button id="btn-copy-url" title="Copiar caminho do ficheiro">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            </button>
             <span class="divider">|</span>
 
             <button id="btn-header-mode" title="Mudar modo (H)"></button>
