@@ -113,15 +113,15 @@
    ========================================= */
 #annotation-toolbar { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 16px; }
 
-#annotation-toolbar button, .zoom-controls button, #search-panel button {
+#annotation-toolbar button, .zoom-controls button {
     border: none; background: transparent; color: #ccc; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     border-radius: 4px; transition: background 0.2s, color 0.2s;
 }
 
 #annotation-toolbar button { height: 32px; width: 32px; border: 1px solid transparent; }
-#annotation-toolbar button:hover, .zoom-controls button:hover, #search-panel button:hover { background: #333; color: white; }
-#annotation-toolbar button svg, .zoom-controls button svg, #search-panel button svg { width: 16px; height: 16px; }
+#annotation-toolbar button:hover, .zoom-controls button:hover { background: #333; color: white; }
+#annotation-toolbar button svg, .zoom-controls button svg { width: 16px; height: 16px; }
 
 #btn-annotate.tool-active, #btn-eraser.tool-active { 
     color: #ffd740; border-color: #ffd740; background: rgba(255, 215, 64, 0.1); 
@@ -144,6 +144,6 @@
 .opt-color.active { border-color: white !important; transform: scale(1.3); }
 
 .zoom-controls { display: flex; align-items: center; gap: 4px; }
-.zoom-controls button, #search-panel button { padding: 6px; }
+.zoom-controls button { padding: 6px; }
 #page-input, #zoom-percent { background: #444; border: none; color: white; width: 50px; text-align: center; border-radius: 3px; }
 .divider { color: #555; margin: 0 5px; }

@@ -172,10 +172,12 @@ function handleKeydown(event) {
         if (event.key === 'Escape') document.activeElement.blur();
         return;
     }
+
     if (event.ctrlKey && event.key.toLowerCase() === 'z') {
         if (undoAnnotation()) event.preventDefault();
         return;
     }
+
     if (event.ctrlKey && ['+', '-', '=', '0'].includes(event.key)) {
         event.preventDefault();
         if (event.key === '+' || event.key === '=') updateZoom(state.currentScale + 0.1);

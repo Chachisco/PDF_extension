@@ -117,27 +117,45 @@ export function renderVisiblePages() {
     });
 }
 
-export function updateZoom(newScale) {
+export async function updateZoom(newScale) {
     state.currentScale = Math.min(Math.max(0.1, newScale), 5);
     document.getElementById('zoom-percent').value = `${Math.round(state.currentScale * 100)}%`;
     
     if (state.pdfDoc) {
         const totalPages = state.pdfDoc.numPages;
+        const pagePromises = [];
+        
+        // 1. Pedir a geometria nova de todas as páginas em simultâneo
         for (let i = 1; i <= totalPages; i++) {
-            state.pdfDoc.getPage(i).then(page => {
-                const vp = page.getViewport({ scale: state.currentScale });
-                const wrapper = document.getElementById(`page-wrapper-${i}`);
-                if (wrapper) {
-                    wrapper.style.width = `${Math.floor(vp.width)}px`;
-                    wrapper.style.height = `${Math.floor(vp.height)}px`;
-                    wrapper.dataset.rendered = 'false';
-                }
-            });
+            pagePromises.push(state.pdfDoc.getPage(i));
         }
+        
+        const pages = await Promise.all(pagePromises);
+
+        pages.forEach((page, index) => {
+            const pageNum = index + 1;
+            const vp = page.getViewport({ scale: state.currentScale });
+            const wrapper = document.getElementById(`page-wrapper-${pageNum}`);
+            
+            if (wrapper) {
+
+                wrapper.style.width = `${Math.floor(vp.width)}px`;
+                wrapper.style.height = `${Math.floor(vp.height)}px`;
+                
+                wrapper.dataset.rendered = 'false'; 
+                
+                const canvas = wrapper.querySelector('canvas');
+                if(canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+        });
     }
 
     Object.values(state.textLayerTasks).forEach(task => task?.cancel());
     Object.values(state.renderTasks).forEach(task => task?.cancel());
+    
     renderVisiblePages();
     saveState();
 }
