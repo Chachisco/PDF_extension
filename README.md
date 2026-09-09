@@ -1,38 +1,46 @@
-# PDF extension
+# Better PDF Viewer
 
-## Objectives
+A lightweight, highly optimized Chrome/Brave extension for reading, annotating, and managing local PDF files. Built on top of `pdf.js`, it focuses on performance, distraction-free reading, and powerful annotation tools.
 
-* allow for horizontal sliding;
-* highlighting tools with multiple colors and sizes;
-* A rubber for deleting highlights;
-* clean header ui with multiples modes like:
-  * minimal: top bar disappears when the mouse is not there;
-  * ghost: only the number of current page and a tool (pen or rubber) if active stays visible when the mouse is not there (ex: 5/8);
-  * fixed: the top bar is always visible;
-* basic zoom control with adjust to width or height options;
-* a way to copy the file's path (both Windows/Linux);
-* allow for notes creation and deletion
-* allow for note dragging
-* allow for note to stay open
+## ✨ Features
 
-## Shortcuts/How to work with the extension
+* **Smart Header UI Modes:**
+  * `Ghost Mode`: The top bar becomes transparent and disappears when idle. It shows only the page counter or the active tool, allowing the PDF to take up the entire screen.
+  * `Minimal Mode`: Hides the toolbar when idle, keeping the interface clean.
+  * `Fixed Mode`: The classic, always-visible toolbar.
+* **Performance Focused:** Uses `IntersectionObserver` to lazy-load and render canvas elements only when they enter the viewport, saving RAM on large documents.
+* **Annotation Tools:** Highlight and underline tools with multiple colors (Yellow, Green, Blue, Red) and thickness options. Includes an eraser to remove specific highlights.
+* **Interactive Sticky Notes:**
+  * Create notes anywhere on the document.
+  * **Drag & Drop:** Click and hold the note icon to move it fluidly across the page.
+  * **Pinning:** Click the "Pin" icon inside an open note to keep it visible while reading.
+  * **Notes Sidebar:** A left-side tracking bar displays yellow markers for every note in the document. Hover to preview the note's text, or click the marker to scroll directly to the page.
+* **OS-Aware Path Copying:** Easily copy the local path of the PDF. Smart click detection copies standard Windows paths or converts them to Linux/WSL paths.
+* **Navigation:** Smooth lateral slider for horizontal panning and precise "Fit to Width / Fit to Height" zoom controls.
 
-Changing header mode:
+## ⌨️ Shortcuts & Usage
 
-* clicking "h"/"H";
-* clicking the header button
+### General Navigation
 
-Creating a new note:
+* **`H` / `h`**: Cycle through Header UI modes (Fixed -> Ghost -> Minimal).
+* **`Ctrl` + `+` / `-` / `0`**: Zoom in, zoom out, or reset zoom.
+* **`Arrow Keys`**: Smoothly snap to the previous or next page (exactly aligned with the top of the viewport).
 
-* Ctrl + click;
-* Clicking the note button on the top bar and clicking on the pdf's location (to be created);
+### Sticky Notes
 
-Deleting a note:
+* **Create a note**: `Ctrl` + `Left Click` anywhere on the page, OR click the Add Note button in the header (creates a note in the center of the current page).
+* **Move a note**: Click and drag the yellow marker.
+* **Delete a note**: Focus on a note and press `Ctrl` + `Delete` (or `Backspace`), OR click the trash bin icon inside the note.
 
-* Ctrl + Del / Ctrl + Backspace (there needs to be a note selected)
-* Selecting a note and clicking on the bin button;
+### Utilities
 
-Setting a note to stay open: (needs to be implemented)
+* **Copy File Path Button**:
+  * `Left Click`: Copies Windows path (e.g., `C:\...`)
+  * `Right Click`: Copies Linux/WSL path (e.g., `/mnt/c/...` or `/home/...`)
 
-* button on top;
-* ctrl + f;
+## 🛠️ Installation
+
+1. Clone or download this repository.
+2. Open your browser and navigate to `chrome://extensions/`.
+3. Enable **Developer mode** in the top right corner.
+4. Click **Load unpacked** and select the extension folder.
