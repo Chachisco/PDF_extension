@@ -14,6 +14,7 @@ A lightweight, highly optimized Chrome/Brave extension for reading, annotating, 
   * Create notes anywhere on the document.
   * **Drag & Drop:** Click and hold the note icon to move it fluidly across the page.
   * **Pinning:** Click the "Pin" icon inside an open note to keep it visible while reading.
+  * **Copying:** Copy the notes content with one click.
   * **Notes Sidebar:** A left-side tracking bar displays yellow markers for every note in the document. Hover to preview the note's text, or click the marker to scroll directly to the page.
 * **OS-Aware Path Copying:** Easily copy the local path of the PDF. Smart click detection copies standard Windows paths or converts them to Linux/WSL paths.
 * **Navigation:** Smooth lateral slider for horizontal panning and precise "Fit to Width / Fit to Height" zoom controls.
